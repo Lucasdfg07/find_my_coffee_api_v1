@@ -1,5 +1,7 @@
 class Store < ApplicationRecord
     has_many :ratings
+
+    validates_presence_of :lonlat, :name
     
     scope :within, -> (latitude, longitude, distance_in_mile = 3.1) {
         where(%{
