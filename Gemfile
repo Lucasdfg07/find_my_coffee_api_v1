@@ -3,6 +3,9 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 ruby '2.5.1'
 
+# Cors
+gem 'rack-cors'
+
 # Gem to use PostGis
 gem 'activerecord-postgis-adapter'
 
