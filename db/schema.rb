@@ -10,27 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_09_05_224911) do
+ActiveRecord::Schema.define(version: 2020_09_05_224937) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "postgis"
 
   create_table "ratings", force: :cascade do |t|
+    t.bigint "store_id"
     t.integer "value"
     t.string "opinion"
     t.string "user_name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-  end
-
-  create_table "store_ratings", force: :cascade do |t|
-    t.bigint "rating_id"
-    t.bigint "store_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["rating_id"], name: "index_store_ratings_on_rating_id"
-    t.index ["store_id"], name: "index_store_ratings_on_store_id"
+    t.index ["store_id"], name: "index_ratings_on_store_id"
   end
 
   create_table "stores", force: :cascade do |t|

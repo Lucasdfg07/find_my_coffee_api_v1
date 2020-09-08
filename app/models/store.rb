@@ -1,7 +1,13 @@
 class Store < ApplicationRecord
-    scope :within, -> (latitude, longitude, distance_in_mile = 1) {
+    has_many :ratings
+    
+    scope :within, -> (latitude, longitude, distance_in_mile = 3.1) {
         where(%{
             ST_Distance(lonlat, 'POINT(%f %f)') < %d
         } % [longitude, latitude, distance_in_mile * 1609.34])
     }
+
+    def ratings_average
+        (self.ratings.sum(:value) / self.ratings.count).to_i
+    end
 end
