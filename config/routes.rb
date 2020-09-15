@@ -2,8 +2,8 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      resources :ratings
-      resources :stores
+      resources :ratings, :defaults => { :format => 'json' }
+      resources :stores, :defaults => { :format => 'json' }
     end
   end
   

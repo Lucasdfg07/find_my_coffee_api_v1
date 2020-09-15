@@ -29,6 +29,8 @@ ActiveRecord::Schema.define(version: 2020_09_05_224937) do
   create_table "stores", force: :cascade do |t|
     t.geography "lonlat", limit: {:srid=>4326, :type=>"st_point", :geographic=>true}
     t.string "name"
+    t.string "address"
+    t.string "google_place_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["lonlat"], name: "index_stores_on_lonlat", using: :gist
