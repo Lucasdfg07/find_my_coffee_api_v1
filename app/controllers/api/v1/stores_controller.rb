@@ -5,7 +5,7 @@ class Api::V1::StoresController < ApplicationController
     end
 
     def index
-        render json: @stores = Store.within(params[:latitude].to_f, params[:longitude].to_f)
+        @stores = Store.within(params[:latitude].to_f, params[:longitude].to_f)
     end
 
     private
