@@ -82,7 +82,7 @@ class Store < ApplicationRecord
 end
 ```
 
-(O Escopo 'within' localizará nossas Stores mais próximas. É usado pelo PostGisn pelo link:
+(O Escopo 'within' localizará nossas Stores mais próximas. É usado pelo PostGis pelo link:
 https://medium.com/@hin556/location-based-searching-in-rails-5-part-2-using-postgis-extension-7ab2d34b9885).
 
 
