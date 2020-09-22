@@ -16,19 +16,19 @@ RSpec.describe "Ratings", type: :request do
     describe "POST /ratings" do
         it "Create rating and store" do
             post "/api/v1/ratings", params: {
-                                                store: {
-                                                    latitude: FFaker::Random.rand(1..999999),
-                                                    longitude: FFaker::Random.rand(1..999999),
-                                                    name: FFaker::Name.name,
-                                                    address: FFaker::AddressBR.full_address,
-                                                    google_place_id: FFaker::Lorem.characters
-                                                }, 
-                                                rating: {
-                                                    value: FFaker::Random.rand(1..5), 
-                                                    opinion: FFaker::Lorem.paragraph, 
-                                                    user_name: FFaker::Name.name
-                                                }
-                                            }
+                                        store: {
+                                            latitude: FFaker::Random.rand(1..999999),
+                                            longitude: FFaker::Random.rand(1..999999),
+                                            name: FFaker::Name.name,
+                                            address: FFaker::AddressBR.full_address,
+                                            google_place_id: FFaker::Lorem.characters
+                                        }, 
+                                        rating: {
+                                            value: FFaker::Random.rand(1..5), 
+                                            opinion: FFaker::Lorem.paragraph, 
+                                            user_name: FFaker::Name.name
+                                        }
+                                    }
                                             
             expect(response).to have_http_status(200)
         end
