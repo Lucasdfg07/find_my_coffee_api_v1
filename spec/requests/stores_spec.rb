@@ -3,8 +3,6 @@ require 'rails_helper'
 RSpec.describe "Stores", type: :request do
     describe "GET /stores" do
         it "Returns a list of stores" do
-            store = FactoryBot.create_list(:store, 4)
-
             get "/api/v1/stores", params: {latitude: FFaker::Random.rand(1..999999), longitude: FFaker::Random.rand(1..999999)}
             expect(response).to have_http_status(200)
         end
