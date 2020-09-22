@@ -319,7 +319,7 @@ Store.create!(name: "Coffee 1", lonlat:"POINT(#{114.2219923} #{22.3129115})")
 Store.create!(name: "Coffee 2 (too far)", lonlat:"POINT(#{114.5019993} #{22.9429125})")
 ```
 
-8 - Executando o comando abaixo, o console mostrará as Stores cadastradas em um raio de 2000 milhas distância:
+8 - Executando o comando abaixo, o console mostrará as Stores cadastradas em um raio de 2000 milhas de distância:
 
 ```
 Store.within(-21.7361752, -41.3498393, 2000)
