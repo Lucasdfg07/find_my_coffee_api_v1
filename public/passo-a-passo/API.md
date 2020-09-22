@@ -254,7 +254,7 @@ end
 ```
 
 
-### Nossa API
+### Criando os endpoints
 
 1 - Para iniciarmos, vamos gerar nossos controllers ratings_controller.rb e stores_controller.rb com os comandos:
 
