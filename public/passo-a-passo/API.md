@@ -15,6 +15,43 @@ ou até melhor:
 rails new api --api  --database=postgresql
 ```
 
+### Instalando o Postgis
+
+#### MacOS
+Use o comando abaixo:
+```
+brew install postgis
+```
+#### Windows
+Baixe o instalador no link abaixo e selecione para a instalação do Postgis conjunta:
+```
+https://www.postgresql.org/download/
+```
+
+Dica: Use o tutorial do link https://qastack.com.br/gis/41060/how-to-install-postgis-on-windows
+
+
+#### Linux
+
+Utilize o comando abaixo para verificar a versão de seu Postgres:
+```
+$ apt-cache policy postgresql
+postgresql:
+Instalado: 8.X.10-0squeeze1
+Candidato: 8.X.10-0squeeze1
+Tabela de versão:
+*** 8.X.10-0squeeze1 0
+```
+
+Após isso, instale o Postgis referente à sua versão do Postgres:
+
+```
+sudo apt-get install postgresql-8.X-postgis postgis
+```
+
+Link de instalação: https://concani3.wordpress.com/2012/02/26/instalar-postgis-no-linux-debian/
+
+
 ### Criando nossos Models
 
 1 - Adicione o seguinte código em seu gemfile:
