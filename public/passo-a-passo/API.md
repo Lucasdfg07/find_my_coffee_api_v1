@@ -485,4 +485,26 @@ json.ratings @store.ratings
 
 (Perceba que estamos renderizando a partial store_essential nos dois arquivos)
 
+### Habilitando o CORS no nosso projeto
+
+1 - Adicione a seguinte gem em seu Gemfile:
+
+gem 'rack-cors'
+
+2 - Rode o blunde em seu terminal.
+
+3 - Crie ou adicione o seguinte código no arquivo /config/initializers/cors.rb:
+
+```
+Rails.application.config.middleware.insert_before 0, Rack::Cors do
+  allow do
+    origins '*'
+
+    resource '*',
+      headers: :any,
+      methods: [:get, :post, :put, :patch, :delete, :options, :head]
+  end
+end
+```
+
 E é isso!! API feita!
