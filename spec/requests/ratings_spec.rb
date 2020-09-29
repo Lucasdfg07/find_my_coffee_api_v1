@@ -7,10 +7,54 @@ RSpec.describe "Ratings", type: :request do
     end
 
     describe "GET /ratings/:id" do
-        it "Returns the store and these ratings by google_place_id" do
-            get "/api/v1/ratings/#{@store.google_place_id}"
-            expect(response).to have_http_status(200)
+        context 'Store exists' do
+            before { @store = FactoryBot.create(:store) }
+
+            context 'Ratings exists' do
+                before do
+                    @ratings = []
+
+                    rand(1..10).times do 
+                        @ratings << FactoryBot.create(:rating, store_id: @store.id)
+                    end
+                    
+                    get "/api/v1/ratings/#{@store.google_place_id}"
+                end
+
+                it { expect(response).to have_http_status(200) }
+
+                it "Returns the rating count correctly" do
+                    expect(JSON.parse(response.body)['ratings_count']).to eq(@ratings.count)
+                end
+
+                it "Returns the rating average correctly" do
+                    get "/api/v1/ratings/#{@store.google_place_id}"
+                    expect(JSON.parse(response.body)['ratings_average']).to eq(@ratings.map(&:value).sum / @ratings.count)
+                end
+            end
+
+            context "Ratings doesn't exists" do
+                before { get "/api/v1/ratings/#{@store.google_place_id}" }
+
+                it { expect(response).to have_http_status(200) }
+
+                it "Returns the rating empty" do
+                    expect(JSON.parse(response.body)['ratings']).to be_empty
+                end
+
+                it "Returns the count equal 0" do
+                    expect(JSON.parse(response.body)['ratings_count']).to eql(0)
+                end
+            end 
         end
+
+        context "Store doesn't exists" do
+            it "Returns status 404" do
+                get "/api/v1/ratings/0000"
+                
+                expect(response).to have_http_status(404)
+            end
+        end        
     end
 
     describe "POST /ratings" do
