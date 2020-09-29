@@ -6,4 +6,4 @@ json.ratings @store.ratings do |rating|
 end
 
 json.ratings_count @store.ratings.count
-json.ratings_average @store.ratings.sum(:value) / @store.ratings.count
+json.ratings_average @store.ratings_average

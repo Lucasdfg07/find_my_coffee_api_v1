@@ -3,7 +3,7 @@ class Store < ApplicationRecord
 
     validates_presence_of :lonlat, :name
     
-    scope :within, -> (latitude, longitude, distance_in_mile = 1800) {
+    scope :within, -> (latitude, longitude, distance_in_mile = 18000) {
         where(%{
             ST_Distance(lonlat, 'POINT(%f %f)') < %d
         } % [longitude, latitude, distance_in_mile * 1609.34])
