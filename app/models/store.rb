@@ -10,6 +10,6 @@ class Store < ApplicationRecord
     }
 
     def ratings_average
-        (self.ratings.sum(:value) / self.ratings.count).to_i
+        (self.ratings.sum(:value) / self.ratings.count).to_i if ratings.count > 0
     end
 end
