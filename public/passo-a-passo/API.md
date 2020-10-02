@@ -51,78 +51,6 @@ sudo apt-get install postgresql-8.X-postgis postgis
 
 Link de instalação: https://concani3.wordpress.com/2012/02/26/instalar-postgis-no-linux-debian/
 
-
-### Criando nossos Models
-
-1 - Adicione o seguinte código em seu gemfile:
-
-```
-# Gem to use PostGis
-gem 'activerecord-postgis-adapter'
-```
-
-2 - Rode um bundle install.
-
-3 - Crie o model rating com o seguinte comando:
-
-```
-rails g model Rating belongs_to:store value:integer opinion:string user_name:string
-```
-
-4 - Agora crie o model Rating com o seguinte comando:
-```
-rails g model Store
-```
-
-5 - Dentro da migration de Store, gerada, cole o seguinte código:
-```
-class CreateStores < ActiveRecord::Migration[5.2]
-  def change
-    create_table :stores do |t|
-      t.st_point :lonlat, geographic: true
-      t.string :name
-      t.string :address
-      t.string :google_place_id
-      t.timestamps
-    end
-
-    add_index :stores, :lonlat, using: :gist
-  end
-end
-```
-
-6 - Dentro do model Rating.rb, cole o seguinte código:
-
-```
-class Rating < ApplicationRecord
-    validates_presence_of :value, :opinion, :user_name
-end
-```
-
-7 - E substitua o código do model Store.rb por:
-
-```
-class Store < ApplicationRecord
-    has_many :ratings
-
-    validates_presence_of :lonlat, :name
-    
-    scope :within, -> (latitude, longitude, distance_in_mile = 1800) {
-        where(%{
-            ST_Distance(lonlat, 'POINT(%f %f)') < %d
-        } % [longitude, latitude, distance_in_mile * 1609.34])
-    }
-
-    def ratings_average
-        (self.ratings.sum(:value) / self.ratings.count).to_i
-    end
-end
-```
-
-(O Escopo 'within' localizará nossas Stores mais próximas. É usado pelo PostGis pelo link:
-https://medium.com/@hin556/location-based-searching-in-rails-5-part-2-using-postgis-extension-7ab2d34b9885).
-
-
 ### Testes RSpec
 
 1 - Vamos colocar as seguintes gems em nosso Gemfile, no grupo :development, :test:
@@ -237,10 +165,54 @@ RSpec.describe "Ratings", type: :request do
     end
 
     describe "GET /ratings/:id" do
-        it "Returns the store and these ratings by google_place_id" do
-            get "/api/v1/ratings/#{@store.google_place_id}"
-            expect(response).to have_http_status(200)
+        context 'Store exists' do
+            before { @store = FactoryBot.create(:store) }
+
+            context 'Ratings exists' do
+                before do
+                    @ratings = []
+
+                    rand(1..10).times do 
+                        @ratings << FactoryBot.create(:rating, store_id: @store.id)
+                    end
+                    
+                    get "/api/v1/ratings/#{@store.google_place_id}"
+                end
+
+                it { expect(response).to have_http_status(200) }
+
+                it "Returns the rating count correctly" do
+                    expect(JSON.parse(response.body)['ratings_count']).to eq(@ratings.count)
+                end
+
+                it "Returns the rating average correctly" do
+                    get "/api/v1/ratings/#{@store.google_place_id}"
+                    expect(JSON.parse(response.body)['ratings_average']).to eq(@ratings.map(&:value).sum / @ratings.count)
+                end
+            end
+
+            context "Ratings doesn't exists" do
+                before { get "/api/v1/ratings/#{@store.google_place_id}" }
+
+                it { expect(response).to have_http_status(200) }
+
+                it "Returns the rating empty" do
+                    expect(JSON.parse(response.body)['ratings']).to be_empty
+                end
+
+                it "Returns the count equal 0" do
+                    expect(JSON.parse(response.body)['ratings_count']).to eql(0)
+                end
+            end 
         end
+
+        context "Store doesn't exists" do
+            it "Returns status 404" do
+                get "/api/v1/ratings/0000"
+                
+                expect(response).to have_http_status(404)
+            end
+        end        
     end
 
     describe "POST /ratings" do
@@ -273,9 +245,45 @@ require 'rails_helper'
 
 RSpec.describe "Stores", type: :request do
     describe "GET /stores" do
-        it "Returns a list of stores" do
-            get "/api/v1/stores", params: {latitude: FFaker::Random.rand(1..999999), longitude: FFaker::Random.rand(1..999999)}
-            expect(response).to have_http_status(200)
+        before do
+            (10).times do
+                @store = FactoryBot.create(:store)
+                @rating = FactoryBot.create(:rating, store_id: @store.id)
+            end
+        end
+
+        context "Stores exists" do
+            before do 
+                get "/api/v1/stores", params: {latitude: -21.7412678, longitude: -41.3549968}
+            end
+            
+            it { expect(response).to have_http_status(200) }
+            
+            it "Return stores near of user" do
+                expect(JSON.parse(response.body).count).to be > 0
+            end
+
+            it "Verify if is ordered by rating average" do
+                JSON.parse(response.body).each_with_index do |store, index|
+                    if index > 0
+                        expect(@last_store["ratings_average"]).to be >= store["ratings_average"]
+                    end
+
+                    @last_store = store
+                end
+            end
+        end
+
+        context "Stores don't exist" do
+            before do 
+                get "/api/v1/stores", params: {latitude: nil, longitude: nil}
+            end
+
+            it { expect(response).to have_http_status(200) }
+
+            it "Returns an empty array" do
+                expect(JSON.parse(response.body)).to eq([])
+            end
         end
     end
 
@@ -291,6 +299,77 @@ end
 ```
 
 
+### Criando nossos Models
+
+1 - Adicione o seguinte código em seu gemfile:
+
+```
+# Gem to use PostGis
+gem 'activerecord-postgis-adapter'
+```
+
+2 - Rode um bundle install.
+
+3 - Crie o model rating com o seguinte comando:
+
+```
+rails g model Rating belongs_to:store value:integer opinion:string user_name:string
+```
+
+4 - Agora crie o model Rating com o seguinte comando:
+```
+rails g model Store
+```
+
+5 - Dentro da migration de Store, gerada, cole o seguinte código:
+```
+class CreateStores < ActiveRecord::Migration[5.2]
+  def change
+    create_table :stores do |t|
+      t.st_point :lonlat, geographic: true
+      t.string :name
+      t.string :address
+      t.string :google_place_id
+      t.timestamps
+    end
+
+    add_index :stores, :lonlat, using: :gist
+  end
+end
+```
+
+6 - Dentro do model Rating.rb, cole o seguinte código:
+
+```
+class Rating < ApplicationRecord
+    validates_presence_of :value, :opinion, :user_name
+end
+```
+
+7 - E substitua o código do model Store.rb por:
+
+```
+class Store < ApplicationRecord
+    has_many :ratings
+
+    validates_presence_of :lonlat, :name
+    
+    scope :within, -> (latitude, longitude, distance_in_mile = 1800) {
+        where(%{
+            ST_Distance(lonlat, 'POINT(%f %f)') < %d
+        } % [longitude, latitude, distance_in_mile * 1609.34])
+    }
+
+    def ratings_average
+        (self.ratings.sum(:value) / self.ratings.count).to_i if ratings.count > 0
+    end
+end
+```
+
+(O Escopo 'within' localizará nossas Stores mais próximas. É usado pelo PostGis pelo link:
+https://medium.com/@hin556/location-based-searching-in-rails-5-part-2-using-postgis-extension-7ab2d34b9885).
+
+
 ### Criando os endpoints
 
 1 - Para iniciarmos, vamos gerar nossos controllers ratings_controller.rb e stores_controller.rb com os comandos:
@@ -298,6 +377,7 @@ end
 ```
 rails g controller api/v1/stores
 rails g controller api/v1/ratings
+rails g controller api/v1/google_stores
 ```
 
 2 - Agora no nosso config/routes.rb, vamos pré instanciar nossas rotas substituindo pelo seguinte código:
@@ -309,6 +389,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       resources :ratings, :defaults => { :format => 'json' }
       resources :stores, :defaults => { :format => 'json' }
+      resources :google_stores, :defaults => { :format => 'json' }
     end
   end
   
