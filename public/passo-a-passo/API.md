@@ -22,6 +22,7 @@ Use o comando abaixo:
 ```
 brew install postgis
 ```
+
 #### Windows
 Baixe o instalador no link abaixo e selecione para a instalação do Postgis conjunta:
 ```
@@ -566,6 +567,124 @@ json.ratings @store.ratings
 
 (Perceba que estamos renderizando a partial store_essential nos dois arquivos)
 
+### Criando nossos services
+
+1 - Crie uma pasta app/services, e nela crie os arquivos all_coffee_services.rb e o show_coffee_details_service.rb.
+
+Por eles faremos nossa chamada API para a api do google.
+
+2 - Inicie o service all_coffees_service.rb com o seguinte código:
+
+```
+require 'rest-client'
+require 'json'
+
+class AllCoffeesService
+    def initialize()
+    end
+  
+    def call
+        begin
+      
+        rescue RestClient::ExceptionWithResponse => e
+            e.response
+        end
+    end
+end
+```
+
+3 - Agora vamos prepará-lo para receber os parâmetros de latitude e longitude ao ser instanciado. Deixe seu método "initialize" do seguinte modo:
+
+```
+def initialize(latitude, longitude)
+    @latitude = latitude
+    @longitude = longitude
+end
+```
+
+4 - Agora no método "call", deixe-o com a seguinte aparência:
+```
+def call
+        begin
+            base_url = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=coffee+shop&location=-#{@latitude},#{@longitude}&radius=5000&key=SUA_GOOGLE_API_KEY"
+            response = RestClient.get base_url
+            value = JSON.parse(response.body)
+      
+        rescue RestClient::ExceptionWithResponse => e
+            e.response
+        end
+    end
+```
+
+5 - Em nosso controller, google_stores_controller.rb, anteriormente gerado, vamos colocar a nossa chamada API pelo service. Coloque o seguinte código:
+```
+class Api::V1::GoogleStoresController < ApplicationController
+    def index
+        render json: AllCoffeesService.new(params[:latitude].to_f, params[:longitude].to_f).call
+    end
+end
+```
+
+6 - Agora, no service show_coffee_details_service.rb, coloque o seguinte código:
+```
+require 'rest-client'
+require 'json'
+
+class ShowCoffeeDetailsService
+    def initialize()
+    end
+  
+    def call
+        begin
+      
+        rescue RestClient::ExceptionWithResponse => e
+            e.response
+        end
+    end
+end
+```
+
+7 - Vamos prepará-lo para receber o nosso id do estabelecimento, vindo do google. Deixe o método "initialize" da seguinte forma:
+
+```
+def initialize(place_id)
+    @place_id = place_id
+end
+```
+
+8 - Agora vamos deixar o método "call" preparado para receber essa api:
+```
+def call
+    begin
+        base_url = "https://maps.googleapis.com/maps/api/place/details/json?place_id=#{@place_id}&key=SUA_GOOGLE_API_KEY"
+        response = RestClient.get base_url
+        value = JSON.parse(response.body)
+    
+    rescue RestClient::ExceptionWithResponse => e
+        e.response
+    end
+end
+```
+
+9 - Para finalizar, adicione mais um método no controller google_stores_controller.rb:
+```
+def show
+    render json: ShowCoffeeDetailsService.new(params[:id]).call
+end
+```
+
+10 - O controller ficará da seguinte forma:
+```
+class Api::V1::GoogleStoresController < ApplicationController
+    def index
+        render json: AllCoffeesService.new(params[:latitude].to_f, params[:longitude].to_f).call
+    end
+
+    def show
+        render json: ShowCoffeeDetailsService.new(params[:id]).call
+    end
+end
+```
 ### Habilitando o CORS no nosso projeto
 
 1 - Adicione a seguinte gem em seu Gemfile:
